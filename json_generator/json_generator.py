@@ -1,45 +1,45 @@
-"""Welcome to Reflex! This file outlines the steps to create a basic app."""
 from rxconfig import config
-
 import reflex as rx
-
-docs_url = "https://reflex.dev/docs/getting-started/introduction"
-filename = f"{config.app_name}/{config.app_name}.py"
+import json
 
 
-class State(rx.State):
-    """The app state."""
+class JsonState(rx.State):
+    json_text: str = ''
+    error_message: str = ''  # поле для отображения сообщения об ошибке
 
-    pass
+    def update_json_text(self, text: str):
+        self.json_text = text
+        self.error_message = ''  # очистка ошибки при изменении текста
+
+    def format_json(self):
+        try:
+            formatted_json = json.dumps(json.loads(self.json_text), indent=4)
+            self.json_text = formatted_json
+            self.error_message = ""  # очистка ошибки при успешном форматировании
+        except json.JSONDecodeError:
+            self.error_message = "Ошибка: введенный текст не является корректным JSON."
 
 
 def index() -> rx.Component:
-    return rx.fragment(
-        rx.color_mode_button(rx.color_mode_icon(), float="right"),
-        rx.vstack(
-            rx.heading("Welcome to Reflex!", font_size="2em"),
-            rx.box("Get started by editing ", rx.code(filename, font_size="1em")),
-            rx.link(
-                "Check out our docs!",
-                href=docs_url,
-                border="0.1em solid",
-                padding="0.5em",
-                border_radius="0.5em",
-                _hover={
-                    "color": rx.color_mode_cond(
-                        light="rgb(107,99,246)",
-                        dark="rgb(179, 175, 255)",
-                    )
-                },
-            ),
-            spacing="1.5em",
-            font_size="2em",
-            padding_top="10%",
-        ),
+    return rx.container(
+        rx.card(
+            rx.vstack(
+                rx.box("JSON Editor"),
+                rx.box(
+                    rx.text_area(value=JsonState.json_text, placeholder="Вставьте или напишите JSON здесь...",
+                                 on_change=JsonState.update_json_text, width='md')
+                ),
+                rx.button("Форматировать JSON", on_click=JsonState.format_json),
+                rx.cond(JsonState.error_message,
+                        rx.box(JsonState.error_message),
+                        rx.box("")
+                )
+            )
+        )
     )
 
 
 # Add state and page to the app.
 app = rx.App()
-app.add_page(index)
+app.add_page(index)  # передаем класс JsonState как аргумент
 app.compile()
