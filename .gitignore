@@ -1,1 +1,5 @@
-*.db*.py[cod].web__pycache__//poetry.lock
+*.db
+*.py[cod]
+.web
+/poetry.lock
+__pycache__/
